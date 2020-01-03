@@ -1,0 +1,14 @@
+{
+    "version": "2017-02-28",
+    "operation": "PutItem",
+    "key": {
+        "url":   $util.dynamodb.toDynamoDBJson($ctx.args.input.url)
+    },
+    "attributeValues": $util.dynamodb.toMapValuesJson($context.args.input),
+    "condition": {
+        "expression": "attribute_not_exists(#userId)",
+        "expressionNames": {
+            "#userId": "userId"
+        }
+    }
+}

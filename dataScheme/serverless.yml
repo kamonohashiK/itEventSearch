@@ -1,0 +1,51 @@
+service: it-event-bot
+
+frameworkVersion: ">=1.48.0 <2.0.0"
+
+provider:
+  name: aws
+  runtime: python3.6
+  stage: dev
+  region: ap-northeast-1
+
+plugins:
+  - serverless-appsync-plugin
+
+custom:
+  appSync:
+    name: ItEventSearchBot
+    authenticationType: AWS_IAM
+    region: ap-northeast-1
+    mappingTemplatesLocation: resolvers
+    mappingTemplates:
+      # Event
+      -
+        type: Query
+        field: byPref
+        dataSource: Event
+      -
+        type: Query
+        field: getEvent
+        dataSource: Event
+      -
+        type: Mutation
+        field: createEvent
+        dataSource: Event
+
+    schema:
+      - schema/event.graphql
+
+    #serviceRole: # if not provided, a default role is generated
+    dataSources:
+      - type: AMAZON_DYNAMODB
+        name: Event
+        description: Event Table
+        config:
+          tableName: Event
+          iamRoleStatements:
+            - Effect: Allow
+              Action:
+                - dynamodb:*
+              Resource:
+                - arn:aws:dynamodb:${self:provider.region}:*:table/Event
+                - arn:aws:dynamodb:${self:provider.region}:*:table/Event/*
