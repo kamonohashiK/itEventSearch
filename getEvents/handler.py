@@ -1,8 +1,9 @@
 import json
 import requests
+import boto3
 
 def hitConnpass(array):
-    URL = "https://connpass.com/api/v1/event"
+    URL = "https://connpass.com/api/v1/event?count=100"
 
     response = requests.get(URL)
     ary = response.json()['events']
@@ -37,7 +38,7 @@ def hitDoorkeeper(array):
         array.append(event)
 
 def hitAtnd(array):
-    URL = "http://api.atnd.org/events/?format=json"
+    URL = "http://api.atnd.org/events/?format=json&count=100"
 
     response = requests.get(URL)
     ary = response.json()['events']
@@ -61,4 +62,19 @@ def main(event, context):
     hitDoorkeeper(events)
     hitAtnd(events)
 
-    return events
+    db = boto3.resource('dynamodb')
+    table = db.Table("Event")
+
+    for e in events:
+        if e['pref']:
+            table.put_item(
+                Item={
+                    'title': e['title'],
+                    'url': e['url'],
+                    'datetime': e['datetime'],
+                    'pref': e['pref'],
+                    'from': e['from']
+                }
+            )
+
+    return True
