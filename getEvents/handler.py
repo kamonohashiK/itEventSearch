@@ -1,6 +1,8 @@
 import json
 import requests
 import boto3
+import re
+import datetime
 
 def hitConnpass(array, area):
     URL = "https://connpass.com/api/v1/event?keyword=" + area
@@ -9,15 +11,22 @@ def hitConnpass(array, area):
     ary = response.json()['events']
 
     for a in ary:
-        event = {
-            'title': a['title'],
-            'url': a['event_url'],
-            'datetime': a['started_at'],
-            'pref': area,
-            'from': 'Connpass'
-        }
+        if a['address'] and area in a['address']:
+            t = a['started_at'].replace("T", " ")
+            time = re.sub(r'\+.*$', '', t)
+            dt = datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S")
+            ut = dt.timestamp()
 
-        array.append(event)
+            event = {
+                'title': a['title'],
+                'url': a['event_url'],
+                'datetime': time,
+                'pref': area,
+                'unixtime': int(ut),
+                'from': 'Connpass'
+            }
+
+            array.append(event)
 
 def hitDoorkeeper(array, area):
     URL = "https://api.doorkeeper.jp/events?q=" + area
@@ -26,15 +35,22 @@ def hitDoorkeeper(array, area):
     ary = response.json()
 
     for a in ary:
-        event = {
-            'title': a['event']['title'],
-            'url': a['event']['public_url'],
-            'datetime': a['event']['starts_at'],
-            'pref': area,
-            'from': 'DoorKeeper'
-        }
+        if a['event']['address'] and area in a['event']['address']:
+            t = a['event']['starts_at'].replace("T", " ")
+            time = re.sub(r'\..*$', '', t)
+            dt = datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S")
+            ut = dt.timestamp()
 
-        array.append(event)
+            event = {
+                'title': a['event']['title'],
+                'url': a['event']['public_url'],
+                'datetime': time,
+                'pref': area,
+                'unixtime': int(ut),
+                'from': 'DoorKeeper'
+            }
+
+            array.append(event)
 
 def hitAtnd(array):
     URL = "http://api.atnd.org/events/?format=json&count=100"
@@ -68,7 +84,7 @@ def main(event, context):
     hitDoorkeeper(events, PREFECTURES[int(number)])
     #hitAtnd(events)
 
-    table = db.Table("Event")
+    table = db.Table("itEvent")
 
     for e in events:
         table.put_item(
@@ -76,6 +92,7 @@ def main(event, context):
                 'title': e['title'],
                 'url': e['url'],
                 'datetime': e['datetime'],
+                'unixtime': e['unixtime'],
                 'pref': e['pref'],
                 'from': e['from']
             }
