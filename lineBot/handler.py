@@ -10,6 +10,8 @@ from linebot.exceptions import (
     LineBotApiError, InvalidSignatureError
 )
 import logging
+import boto3
+from boto3.dynamodb.conditions import Key, Attr
 
 logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
@@ -41,8 +43,29 @@ def main(event, context):
 
     @handler.add(MessageEvent, message=TextMessage)
     def message(line_event):
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table('itEvent')
+
         text = line_event.message.text
-        line_bot_api.reply_message(line_event.reply_token, TextSendMessage(text=text))
+        events = table.scan(
+            FilterExpression=Attr('pref').eq(text)
+        )
+
+        replyText = str(len(events['Items'])) + "件ヒットしました。"
+        #line_bot_api.reply_message(line_event.reply_token, TextSendMessage(text=replyText))
+
+        event = ""
+        count = 0
+        for e in events['Items']:
+            event += e['datetime'] + "\n"
+            event += e['title'] + "\n"
+            event += e['url'] + "\n"
+            event += "\n"
+            count += 1
+
+            if count == 9:
+                break
+        line_bot_api.reply_message(line_event.reply_token, TextSendMessage(text=event))
 
     try:
         handler.handle(body, signature)
