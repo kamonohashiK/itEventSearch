@@ -8,7 +8,7 @@ def string_to_datetime(string):
     return datetime.datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
 
 def hitConnpass(array, area):
-    URL = "https://connpass.com/api/v1/event?count=50&keyword=" + area
+    URL = "https://connpass.com/api/v1/event?count=100&keyword=" + area
 
     response = requests.get(URL)
     ary = response.json()['events']
