@@ -40,7 +40,7 @@ def hitDoorkeeper(array, area):
     ary = response.json()
 
     for a in ary:
-        if a['event']['address'] and area in a['event']['address']:
+        if a['event']['address']:
             t = a['event']['starts_at'].replace("T", " ")
             time = re.sub(r'\..*$', '', t)
             dt = datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S")
