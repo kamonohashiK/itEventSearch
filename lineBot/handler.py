@@ -12,6 +12,7 @@ from linebot.exceptions import (
 import logging
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
+from datetime import datetime
 
 logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
@@ -50,7 +51,10 @@ def main(event, context):
 
         text = line_event.message.text
         events = []
-        if text in PREFECTURES:
+        if text == "作者に連絡":
+            event = "このbotについてお気づきの点がありましたら、作者のTwitterアカウントにリプライもしくはDMでお知らせください。\nhttps://twitter.com/platypus_k86"
+            line_bot_api.reply_message(line_event.reply_token, TextSendMessage(text=event))
+        elif text in PREFECTURES:
             events = table.scan(
                 FilterExpression=Attr('pref').eq(text)
             )
@@ -62,7 +66,7 @@ def main(event, context):
         if events['Items']:
             event = ""
             count = 0
-            for e in events['Items']:
+            for e in sorted(events['Items'], key=lambda x: datetime.strptime(x['datetime'], '%Y-%m-%d %H:%M:%S')):
                 event += e['datetime'] + "\n"
                 event += e['title'] + "\n"
                 event += e['url'] + "\n"
