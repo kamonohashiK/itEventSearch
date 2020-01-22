@@ -23,9 +23,10 @@ def main(event, context):
     for a in ary:
         if a['event']['address']:
             t = a['event']['starts_at'].replace("T", " ")
-            time = re.sub(r'\..*$', '', t)
-            dt = datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S")
+            timeString = re.sub(r'\..*$', '', t)
+            dt = datetime.datetime.strptime(timeString, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=9)
             ut = dt.timestamp()
+            time = dt.strftime('%Y-%m-%d %H:%M:%S')
 
             event = {
                 'title': a['event']['title'],
