@@ -67,7 +67,7 @@ def main(event, context):
             event = ""
             count = 0
             for e in sorted(events['Items'], key=lambda x: datetime.strptime(x['datetime'], '%Y-%m-%d %H:%M:%S')):
-                event += e['datetime'] + "(" + e['pref'] + ")" + "\n"
+                event += e['datetime'][:-3] + "(" + e['pref'] + ")" + "\n"
                 event += e['title'] + "\n"
                 event += e['url'] + "\n"
                 event += "\n"
